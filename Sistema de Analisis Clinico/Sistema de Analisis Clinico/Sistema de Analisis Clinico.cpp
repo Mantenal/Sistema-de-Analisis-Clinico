@@ -5,25 +5,74 @@
 #include "Windows.h"
 #include <iostream>
 #include <string>
+#include<fstream>
+#include<string.h>
+
 using namespace std;
+bool primera = true;
+
+
+
+
+/***********************************************************************************************************************************/
+
+//Recursos Materiales
 
 class R_Materiales {
 private:
-	int codigo;
-	int tipo;
+	int Codigo;
+	int Tipo;
 	string Nombre;
-	int existencia;
-	float precio;
+	int Existencia;
+	float Precio;
 public:
-	R_Materiales();
-	~R_Materiales();
+
 	void alta();
 	void buscar();
 	void modificar();
 	void R_analgesicos();
 	void R_antivioticos();
 	void R_preventivos();
+}materiales;
+
+
+
+class Nodo_Materiales {
+	int Codigo;
+	int Tipo;
+	string Nombre;
+	int Existencia;
+	float Precio;
+	Nodo_Materiales *ant, *sig;
+public:
+	Nodo_Materiales(int codigo,int tipo,string nombre,int existencia,float precio) {
+		Codigo = codigo;
+		Tipo = tipo;
+		Nombre = nombre;
+		Existencia = existencia;
+		Precio = precio;
+	};
+	friend class ListaMateriales;
 };
+
+
+
+class ListaMateriales {
+	Nodo_Materiales *raiz;
+public:
+	ListaMateriales() { raiz = NULL; };
+	~ListaMateriales();
+	void insertarPrimero(int codigo, int tipo, string nombre, int existencia, float precio);
+	void imprimir();
+};
+
+
+/***********************************************************************************************************************************/
+
+
+
+
+
 
 class C_Personal : public R_Materiales {
 private:
@@ -76,6 +125,7 @@ public:
 int main()
 {
 	char opc, opc2;
+	system("cls");
 	do
 	{
 		cout << "LABORATORIO DE ANALISIS CLINICO" << endl << endl;
@@ -101,6 +151,7 @@ int main()
 			{
 			case'1':
 				// alta producto
+				materiales.alta();
 				break;
 			case'2':
 				//buscar producto
@@ -110,6 +161,7 @@ int main()
 				break;
 			case'4':
 				//reporte de analgesicos
+				materiales.R_analgesicos();
 				break;
 			case '5':
 				//reporte de antibiote 
@@ -212,3 +264,128 @@ int main()
 	return 0;
 }
 
+
+void R_Materiales::alta() {
+
+	system("cls");
+	ofstream entrada;
+	entrada.open("Materiales.dat", ios::out | ios::app | ios::binary);
+
+	if (entrada.fail())
+	{
+		cout << "error al crear archivo";
+		system("pause");
+	}
+
+	else
+	{
+		cout << "Ingresar Codigo:" << endl;
+		cin >> materiales.Codigo;
+
+		do
+		{
+			cout << "ingresa el tipo:" << endl;
+			cout << "1-Analgesico" << endl;
+			cout << "2-Antiviotico" << endl;
+			cout << "3-Preventivo" << endl;
+			cin >> materiales.Tipo;
+		} while (materiales.Tipo < 0 && materiales.Tipo>4);
+		cout << "Ingresa el Nombre:" << endl;//revisar aqui el tipo de dato string puede dar problemas
+		getline(cin, materiales.Nombre);
+		getline(cin, materiales.Nombre);
+		cout << "Ingresa la Cantidad:" << endl;
+		cin >> materiales.Existencia;
+		cout << "Ingresa el Precio:" << endl;
+		cin >> materiales.Precio;
+		entrada.write((char *)&materiales, sizeof(R_Materiales));
+		entrada.close();
+	}
+
+}
+
+
+void R_Materiales::R_analgesicos()
+{
+
+	ListaMateriales *lista1 = new ListaMateriales();
+
+	ifstream salida;
+	salida.open("Materiales.dat", ios::in | ios::binary);
+
+	if (salida.fail())
+	{
+		cout << "error al abrir el archivo" << endl;
+		system("pause");
+	}
+	else
+	{
+		int nreg;
+
+		salida.seekg(0, ios::end);
+		nreg = salida.tellg() / sizeof(R_Materiales);
+		salida.seekg(0);
+
+		for (int x = 0;x < nreg;x++)
+		{
+			salida.read((char *)&materiales, sizeof(R_Materiales));
+
+			
+				// if(strcmp(nom,estu.nombre)==0) 
+				/* cout << "nombre :" <<estu.Nombre<< endl;//revisar aqui el tipo de dato string puede dar problemas
+
+				cout << "Anios: " <<estu.Anio << endl;
+
+				cout << "Mes: " <<estu.Mes<< endl;
+
+				cout << "Dia: " <<estu.Dia<< endl;
+
+				cout << "Info: " <<estu.Info<< endl;
+				cout << endl << endl;*/
+			if (materiales.Tipo == 1) {
+				lista1->insertarPrimero(materiales.Codigo, materiales.Tipo, materiales.Nombre, materiales.Existencia, materiales.Precio);
+
+			}
+		
+		
+	}
+		salida.close();
+		lista1->imprimir();
+
+		system("pause");
+
+	}
+
+}
+
+void ListaMateriales::imprimir()
+{
+	Nodo_Materiales *reco = raiz;
+	while (reco != NULL)
+	{
+		cout << reco->Codigo << "-";
+		
+		cout << reco->Nombre << "-";
+		cout << reco->Existencia<< "-";
+		cout << reco->Precio << endl;
+
+		reco = reco->sig;
+	}
+	cout << "\n";
+}
+
+void ListaMateriales::insertarPrimero(int codigo, int tipo, string nombre, int existencia, float precio)
+{
+	Nodo_Materiales *nuevo = new Nodo_Materiales(codigo, tipo, nombre, existencia, precio);
+	nuevo->ant = NULL;
+	if (raiz == NULL)
+	{
+		nuevo->sig = NULL;
+		raiz = nuevo;
+	}
+	else
+	{
+		nuevo->sig = raiz;
+		raiz->ant = raiz;
+		raiz = nuevo;
+	}
+}

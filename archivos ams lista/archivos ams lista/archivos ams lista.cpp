@@ -8,19 +8,25 @@
 
 using namespace std;
 
-void entradas();
+/*void entradas();
 void salidas();
 void eliminar();
-void modificar();
+void modificar();*/
 bool primera = true;
 
-struct estudiantes
+class estudiantes
 {
+private:
 	int Info;
 	string Nombre;
 	int Dia;
 	int Mes;
 	int Anio;
+public:
+	void entradas();
+	void salidas();
+	void eliminar();
+	void modificar();
 
 }estu;
 
@@ -111,19 +117,19 @@ int main()
 		switch (dec)
 		{
 		case 'A':
-			entradas();
+			estu.entradas();
 			break;
 
 		case 'B':
-			salidas();
+			estu.salidas();
 			break;
 
 		case 'C':
-			modificar();
+			estu.modificar();
 			break;
 
 		case 'D':
-			eliminar();
+			estu.eliminar();
 			break;
 
 
@@ -136,7 +142,7 @@ int main()
 }
 
 
-void entradas()
+void estudiantes::entradas()
 {
 	ofstream entrada;
 	entrada.open("archivo.dat", ios::out | ios::app | ios::binary);
@@ -184,7 +190,7 @@ void entradas()
 
 
 
-void salidas()
+void estudiantes::salidas()
 {
 
 	ListaGenerica *lista1 = new ListaGenerica();
@@ -242,7 +248,7 @@ void salidas()
 
 
 
-void eliminar()
+void estudiantes::eliminar()
 {
 	ofstream entrada;
 	entrada.open("temp.dat", ios::out | ios::binary);
@@ -294,7 +300,7 @@ void eliminar()
 
 
 
-void modificar()
+void estudiantes::modificar()
 {
 
 	ofstream entrada;

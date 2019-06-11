@@ -97,7 +97,7 @@ private:
 	float Sueldo;
 public:
 	void agregar();
-	void buscar(bool todo);
+	void buscar(bool todo,bool agregar);
 	void Modificar();
 	void eliminar();
 	//funcion de agregar heredada de R_materiales
@@ -260,19 +260,22 @@ int main()
 				break;
 			case'2':
 				//reporte de empleado
-				personal.buscar(true);
+				personal.buscar(true,false);
 				break;
 			case'3':
 				//Busca un empleado
-				personal.buscar(false);
+				personal.buscar(false,false);
 				break;
 			case'4':
 				//modificar datos 
+				personal.Modificar();
 				break;
 			case '5':
 				//eliminar un empleado
+				personal.eliminar();
 				break;
 			case '6':
+				personal.buscar(false, true);
 				// agregar producto
 
 				break;
@@ -618,13 +621,13 @@ void C_Personal::agregar() {
 
 
 
-void C_Personal::buscar(bool todo)
+void C_Personal::buscar(bool todo,bool agregar)
 {
 
 	ListaPersonal *lista2 = new ListaPersonal();
 
 	int nreg,codigo;
-	bool encontrar = false;
+	bool encontrar = false,alta=false;
 
 	ifstream salida;
 	salida.open("Personal.dat", ios::in | ios::binary);
@@ -634,10 +637,6 @@ void C_Personal::buscar(bool todo)
 		cout << "error al abrir el archivo" << endl;
 		system("pause");
 	}
-
-
-
-
 
 
 	else
@@ -655,10 +654,13 @@ void C_Personal::buscar(bool todo)
 
 				if (personal.Tipo == 1) {
 					lista2->insertarPrimero(personal.Nombre, personal.Edad, personal.Ine, personal.Codigo, "Admistrativo", personal.Sueldo);
+					
 				}
 
 				else {
 					lista2->insertarPrimero(personal.Nombre, personal.Edad, personal.Ine, personal.Codigo, "Laboratorista", personal.Sueldo);
+
+
 				}
 
 			}
@@ -680,10 +682,26 @@ void C_Personal::buscar(bool todo)
 					encontrar = true;
 					if (personal.Tipo == 1) {
 						lista2->insertarPrimero(personal.Nombre, personal.Edad, personal.Ine, personal.Codigo, "Admistrativo", personal.Sueldo);
+
+						if (agregar)
+						{
+							cout << "Los empleados Administrativos no pueden agregar productos" << endl;
+						}
+
 					}
 
 					else {
 						lista2->insertarPrimero(personal.Nombre, personal.Edad, personal.Ine, personal.Codigo, "Laboratorista", personal.Sueldo);
+
+
+						if (agregar && alta==false )
+						{
+							alta = true;
+							salida.close();
+							
+							personal.alta();
+						}
+
 					}
 				}
 			}
@@ -693,17 +711,21 @@ void C_Personal::buscar(bool todo)
 
 	}
 
-	salida.close();
-	lista2->imprimir();
-
+	
+	if (agregar==false)
+	{
+		salida.close();
+		lista2->imprimir();
+	
+	}
 	if (encontrar == false && todo == false)
 	{
-		cout << "No se encontro Producto" << endl;
+		cout << "No se encontro Empleado" << endl;
 	}
 	system("pause");
 
-
 	delete lista2;
+
 }
 
 
@@ -743,4 +765,131 @@ void ListaPersonal::imprimir()
 		reco = reco->sig;
 	}
 	cout << "\n";
+}
+
+
+void C_Personal::Modificar()
+{
+	
+	ofstream entrada;
+	entrada.open("temp1.dat", ios::out | ios::binary);
+
+
+	ifstream salida;
+	salida.open("Personal.dat", ios::in | ios::binary);
+
+	if (salida.fail() || entrada.fail())
+	{
+		cout << "error al abrir el archivo" << endl;
+		system("pause");
+	}
+	else
+	{
+		int nreg;
+		int ntem;
+		bool encontrar = false;
+
+		cout << "Introduce el codigo del Empleado a Cambiar" << endl;
+		cin >> ntem;
+
+
+		salida.seekg(0, ios::end);
+		nreg = salida.tellg() / sizeof(C_Personal);
+		salida.seekg(0);
+
+		for (int x = 0;x < nreg;x++)
+		{
+			salida.read((char *)&personal, sizeof(C_Personal));
+			if (personal.Codigo == ntem)
+			{
+				
+				cout << "Ingresa el Nombre:" << endl;//revisar aqui el tipo de dato string puede dar problemas
+				getline(cin, personal.Nombre);
+				getline(cin, personal.Nombre);
+				cout << "Ingresa la Edad:" << endl;
+				cin >> personal.Edad;
+				cout << "Ingresa el Numero de la INE:" << endl;
+				cin >> personal.Ine;
+				cout << "Ingresar Codigo:" << endl;
+				cin >> personal.Codigo;
+
+				do
+				{
+					cout << "ingresa el tipo:" << endl;
+					cout << "1-Administrativos" << endl;
+					cout << "2-Laboratoristas" << endl;
+					cin >> personal.Tipo;
+				} while (personal.Tipo != 1 && personal.Tipo != 2);
+
+				cout << "Ingresar Sueldo:" << endl;
+				cin >> personal.Sueldo;
+				encontrar = true;
+			}
+
+			entrada.write((char *)&personal, sizeof(C_Personal));
+		}
+
+		if (encontrar == false)
+		{
+			cout << "No se encontro Registro" << endl;
+		}
+		salida.close();
+		entrada.close();
+		remove("Personal.dat");
+		rename("temp1.dat", "Personal.dat");
+
+		// remove("hola.docx");
+		system("pause");
+
+	}
+}
+
+
+
+
+void C_Personal::eliminar()
+{
+	ofstream entrada;
+	entrada.open("temp1.dat", ios::out | ios::binary);
+	ifstream salida;
+	salida.open("Personal.dat", ios::in | ios::binary);
+
+	if (salida.fail() || entrada.fail())
+	{
+		cout << "error al abrir el archivo" << endl;
+		system("pause");
+	}
+	else
+	{
+		int nreg;
+		int ntem;
+		cout << "introduce Codigo del Empleado" << endl;
+		cin >> ntem;
+
+		salida.seekg(0, ios::end);
+		nreg = salida.tellg() / sizeof(C_Personal);
+		salida.seekg(0);
+
+		for (int x = 0;x<nreg;x++)
+		{
+			salida.read((char *)&personal, sizeof(C_Personal));
+			if (personal.Codigo == ntem)
+			{
+				cout << "registro borrado" << endl;
+			}
+
+			else
+			{
+				entrada.write((char *)&personal, sizeof(C_Personal));
+			}
+
+		}
+		salida.close();
+		entrada.close();
+		remove("Personal.dat");
+		rename("temp1.dat", "Personal.dat");
+
+		system("pause");
+
+	}
 }

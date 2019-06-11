@@ -5,6 +5,7 @@
 #include "Windows.h"
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include<fstream>
 #include<string.h>
 
@@ -28,11 +29,13 @@ private:
 public:
 
 	void alta();
-	void buscar();
 	void modificar();
-	void R_analgesicos();
+	/*void R_analgesicos();
 	void R_antivioticos();
-	void R_preventivos();
+	void R_preventivos();*/
+
+
+	void buscar(bool buscar, int dato);//1,1 buscar,     0,1 analgesicos,  0,2antivioticos,   0,3preventivos
 }materiales;
 
 
@@ -45,7 +48,7 @@ class Nodo_Materiales {
 	float Precio;
 	Nodo_Materiales *ant, *sig;
 public:
-	Nodo_Materiales(int codigo,int tipo,string nombre,int existencia,float precio) {
+	Nodo_Materiales(int codigo, int tipo, string nombre, int existencia, float precio) {
 		Codigo = codigo;
 		Tipo = tipo;
 		Nombre = nombre;
@@ -61,10 +64,20 @@ class ListaMateriales {
 	Nodo_Materiales *raiz;
 public:
 	ListaMateriales() { raiz = NULL; };
-	~ListaMateriales();
+	~ListaMateriales() {
+		Nodo_Materiales *reco = raiz;
+		Nodo_Materiales *bor;
+		while (reco != NULL)
+		{
+			bor = reco;
+			reco = reco->sig;
+			delete bor;
+		}
+	};
 	void insertarPrimero(int codigo, int tipo, string nombre, int existencia, float precio);
 	void imprimir();
 };
+
 
 
 /***********************************************************************************************************************************/
@@ -125,9 +138,10 @@ public:
 int main()
 {
 	char opc, opc2;
-	system("cls");
+	
 	do
 	{
+		system("cls");
 		cout << "LABORATORIO DE ANALISIS CLINICO" << endl << endl;
 		cout << "1-Recursos Materiales" << endl;
 		cout << "2-Control de Personal" << endl;
@@ -152,27 +166,34 @@ int main()
 			case'1':
 				// alta producto
 				materiales.alta();
+
 				break;
 			case'2':
 				//buscar producto
+				materiales.buscar(true, 1);
 				break;
 			case'3':
 				//modificar precio 
+				materiales.modificar();
+
 				break;
 			case'4':
 				//reporte de analgesicos
-				materiales.R_analgesicos();
+				materiales.buscar(false, 1);
 				break;
 			case '5':
 				//reporte de antibiote 
+				materiales.buscar(false, 2);
 				break;
 			case '6':
 				// reporte preventivo 
+				materiales.buscar(false, 3);
 				break;
 			default:
 				//falla
 				break;
 			}
+
 			break;
 		case '2':
 			cout << "CONTROL DE PERSONAL" << endl << endl;
@@ -304,10 +325,13 @@ void R_Materiales::alta() {
 }
 
 
-void R_Materiales::R_analgesicos()
+void R_Materiales::buscar(bool buscar, int dato)
 {
 
 	ListaMateriales *lista1 = new ListaMateriales();
+
+	int nreg;
+	string nombre,nombre2;
 
 	ifstream salida;
 	salida.open("Materiales.dat", ios::in | ios::binary);
@@ -319,43 +343,70 @@ void R_Materiales::R_analgesicos()
 	}
 	else
 	{
-		int nreg;
-
 		salida.seekg(0, ios::end);
 		nreg = salida.tellg() / sizeof(R_Materiales);
 		salida.seekg(0);
 
-		for (int x = 0;x < nreg;x++)
-		{
-			salida.read((char *)&materiales, sizeof(R_Materiales));
+		if (buscar == false) {//buscar antivioticos,analgesicos,preventivos
 
-			
-				// if(strcmp(nom,estu.nombre)==0) 
-				/* cout << "nombre :" <<estu.Nombre<< endl;//revisar aqui el tipo de dato string puede dar problemas
+			for (int x = 0;x < nreg;x++)
+			{
+				salida.read((char *)&materiales, sizeof(R_Materiales));
 
-				cout << "Anios: " <<estu.Anio << endl;
+				if (materiales.Tipo == dato) {
+					lista1->insertarPrimero(materiales.Codigo, materiales.Tipo, materiales.Nombre, materiales.Existencia, materiales.Precio);
 
-				cout << "Mes: " <<estu.Mes<< endl;
-
-				cout << "Dia: " <<estu.Dia<< endl;
-
-				cout << "Info: " <<estu.Info<< endl;
-				cout << endl << endl;*/
-			if (materiales.Tipo == 1) {
-				lista1->insertarPrimero(materiales.Codigo, materiales.Tipo, materiales.Nombre, materiales.Existencia, materiales.Precio);
+				}
 
 			}
+			
+		}
+
+
+
+
+		else
+		{
+			if (dato==1)
+			{
+				cout << "Ingresa el Nombre del Producto a Buscar" << endl;
+				getline(cin, nombre);
+				getline(cin, nombre);
+
 		
-		
-	}
+				std::transform(nombre.begin(), nombre.end(), nombre.begin(), ::toupper);
+			
+
+				for (int x = 0;x < nreg;x++)
+				{
+					salida.read((char *)&materiales, sizeof(R_Materiales));
+
+					nombre2 = materiales.Nombre;
+					std::transform(nombre2.begin(), nombre2.end(), nombre2.begin(), ::toupper);
+
+					if (nombre == nombre2) {
+						lista1->insertarPrimero(materiales.Codigo, materiales.Tipo, materiales.Nombre, materiales.Existencia, materiales.Precio);
+
+					}
+
+				}
+
+
+			}
+		}
+
+
+
+
 		salida.close();
 		lista1->imprimir();
-
 		system("pause");
 
 	}
-
+	delete lista1;
 }
+
+
 
 void ListaMateriales::imprimir()
 {
@@ -363,9 +414,9 @@ void ListaMateriales::imprimir()
 	while (reco != NULL)
 	{
 		cout << reco->Codigo << "-";
-		
+
 		cout << reco->Nombre << "-";
-		cout << reco->Existencia<< "-";
+		cout << reco->Existencia << "-";
 		cout << reco->Precio << endl;
 
 		reco = reco->sig;
@@ -387,5 +438,64 @@ void ListaMateriales::insertarPrimero(int codigo, int tipo, string nombre, int e
 		nuevo->sig = raiz;
 		raiz->ant = raiz;
 		raiz = nuevo;
+	}
+}
+
+
+
+void R_Materiales::modificar()
+{
+
+	ofstream entrada;
+	entrada.open("temp.dat", ios::out | ios::binary);
+
+
+	ifstream salida;
+	salida.open("Materiales.dat", ios::in | ios::binary);
+
+	if (salida.fail() || entrada.fail())
+	{
+		cout << "error al abrir el archivo" << endl;
+		system("pause");
+	}
+	else
+	{
+		int nreg;
+		int ntem;
+		bool encontrar = false;
+
+		cout << "Introduce el codigo del producto a cambiar" << endl;
+		cin >> ntem;
+
+
+		salida.seekg(0, ios::end);
+		nreg = salida.tellg() / sizeof(R_Materiales);
+		salida.seekg(0);
+
+		for (int x = 0;x < nreg;x++)
+		{
+			salida.read((char *)&materiales, sizeof(R_Materiales));
+			if (materiales.Codigo == ntem)
+			{
+				cout << "Introduzca nuevo precio" << endl;
+				cin >> materiales.Precio;
+				encontrar = true;
+			}
+
+			entrada.write((char *)&materiales, sizeof(R_Materiales));
+		}
+
+		if (encontrar == false)
+		{
+			cout << "No se encontro Registro" << endl;
+		}
+		salida.close();
+		entrada.close();
+		remove("Materiales.dat");
+		rename("temp.dat", "Materiales.dat");
+
+		// remove("hola.docx");
+		system("pause");
+
 	}
 }
